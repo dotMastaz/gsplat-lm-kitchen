@@ -1,0 +1,24 @@
+[
+  {
+    "id": "objet_87932387",
+    "label": "Mitigeur",
+    "description": "https://www.leroymerlin.fr/produits/robinet-de-cuisine-delinia-star-argent-87932387.html",
+    "photo": "/assets/87932387.webp",
+    "prix": "59,90€",
+    "magasin": "V. ASCQ",
+    "disponibilite": "En stock",
+    "boundingBox": {
+      "center": [
+        0.7,
+        0,
+        2.25
+      ],
+      "size": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    "metadata": {}
+  }
+]

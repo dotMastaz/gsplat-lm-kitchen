@@ -1,0 +1,527 @@
+/* ===== Design Tokens ===== */
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Dark theme palette */
+  --bg-primary: #0a0a0f;
+  --bg-overlay: rgba(12, 12, 20, 0.85);
+  --bg-glass: rgba(20, 20, 35, 0.75);
+  --bg-card: rgba(25, 25, 45, 0.9);
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-accent: rgba(99, 102, 241, 0.3);
+
+  --text-primary: #f0f0f5;
+  --text-secondary: rgba(240, 240, 245, 0.65);
+  --text-muted: rgba(240, 240, 245, 0.4);
+
+  --accent: #67a335;
+  --accent-glow: rgba(79, 165, 64, 0.35);
+  --accent-hover: #67a335;
+
+  --success: #22c55e;
+  --warning: #f59e0b;
+
+  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* UI Scaling factor */
+  --ui-scale: 1;
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ===== Reset & Base ===== */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+  /* Laisse passer les clics vers le canvas en dessous */
+}
+
+#root>* {
+  pointer-events: none;
+  /* Par défaut, les enfants ne bloquent pas non plus */
+}
+
+/* ===== App Container ===== */
+.app-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* On réactive les clics uniquement pour les éléments interactifs */
+.notification-panel,
+.controls-hint,
+.proximity-indicator,
+.loading-overlay,
+.tag-marker,
+.notification-close,
+.notification-description a {
+  pointer-events: auto;
+}
+
+/* ===== Viewer Canvas ===== */
+#gsplat-canvas-container {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* ===== Loading Screen ===== */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  gap: 24px;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loading-spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.loading-progress {
+  width: 200px;
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.loading-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+}
+
+/* ===== Tag Markers (CSS2DRenderer) ===== */
+.tag-marker {
+  position: fixed;
+  top: -100px;
+  /* Hidden initially */
+  left: -100px;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+  z-index: 20;
+}
+
+.tag-marker:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.tag-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 4px var(--accent-glow),
+    0 0 20px var(--accent-glow),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: tag-pulse 2.5s ease-in-out infinite;
+}
+
+.tag-dot::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(99, 102, 241, 0.25);
+  animation: tag-ring 2.5s ease-in-out infinite;
+}
+
+@keyframes tag-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px var(--accent-glow), 0 0 20px var(--accent-glow), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.15), 0 0 35px var(--accent-glow), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes tag-ring {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+.tag-label {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  border: 1px solid var(--border-subtle);
+  opacity: 0;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  pointer-events: none;
+}
+
+.tag-marker:hover .tag-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* ===== Notification Panel ===== */
+.notification-panel {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  left: auto;
+  transform: translateX(120%);
+  z-index: 100;
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  background: var(--bg-card);
+  backdrop-filter: blur(32px) saturate(1.8);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  overflow: hidden;
+  transition: transform var(--transition-smooth), opacity var(--transition-smooth);
+  opacity: 0;
+  transform-origin: bottom right;
+}
+
+.notification-panel.visible {
+  transform: translateX(0) scale(var(--ui-scale));
+  opacity: 1;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.notification-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent), #67a335);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-icon svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.notification-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.notification-subtitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.notification-body {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-image-container {
+  width: 100%;
+  height: 180px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #1a1a2e;
+  margin-top: -10px;
+  border: 1px solid var(--border-subtle);
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.notification-panel:hover .product-image {
+  transform: scale(1.05);
+}
+
+.product-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.price-tag {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.stock-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.stock-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+}
+
+.notification-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+}
+
+.notification-description a {
+  color: var(--accent-hover);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.notification-description a:hover {
+  color: #a5b4fc;
+  text-decoration: underline;
+}
+
+.notification-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+/* ===== Controls Hint ===== */
+.controls-hint {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) scale(var(--ui-scale));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-muted);
+  animation: hint-fade-in 0.8s ease-out 1.5s both;
+}
+
+.controls-hint kbd {
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+@keyframes hint-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ===== Proximity Indicator ===== */
+.proximity-indicator {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-accent);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent-hover);
+  opacity: 0;
+  transform: translateX(20px) scale(var(--ui-scale));
+  transform-origin: right center;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.proximity-indicator.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.proximity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: prox-blink 1s ease-in-out infinite;
+}
+
+@keyframes prox-blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
